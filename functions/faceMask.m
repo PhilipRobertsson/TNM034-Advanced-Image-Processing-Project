@@ -11,30 +11,55 @@ workloadImage = imageInput;
 R = workloadImage(:,:,1);
 G = workloadImage(:,:,2);
 B = workloadImage(:,:,3);
-AR = double(0);
-AG = double(0);
-AB = double(0);
+avgR = mean(R(:));
+avgG = mean(G(:));
+avgB = mean(B(:));
+avgGray = (avgR+avgG+avgB)/3;
 
-subplot(1,3,1);
+% Adjustment factors
+aR = avgGray/avgR;
+aG = avgGray/avgG;
+aB = avgGray/avgB;
+
+% Adjustment of RGB channels
+adR = R * aR;
+adG = G * aG;
+adB = B * aB;
+
+% Temporary image viewing
+subplot(2,4,1);
 imshow(R);
+title('Red channel');
 
-subplot(1,3,2);
+subplot(2,4,2);
 imshow(G);
+title('Green channel');
 
-subplot(1,3,3);
+subplot(2,4,3);
 imshow(B);
+title('Blue channel');
 
-for i = 1 : size(workloadImage,1)
-    for j = 1 : size(workloadImage,2)
-        AR = double(AR + R(i,j));
-        AG = double(AG + G(i,j));
-        AB = double(AB + B(i,j));
-    end
-end
+subplot(2,4,4);
+imshow(workloadImage);
+title('Original Image');
 
-AR = double(AR / (i*j))
-AG = double(AG / (i*j))
-AB = double(AB / (i*j))
+subplot(2,4,5);
+imshow(adR);
+title('Adjusted red channel');
+
+subplot(2,4,6);
+imshow(adG);
+title('Adjusted green channel');
+
+subplot(2,4,7);
+imshow(adB);
+title('Adjusted blue channel');
+
+subplot(2,4,8);
+imshow(cat(3, adR, adG, adB));
+title('Adjusted image');
+
+
 
 end
 
