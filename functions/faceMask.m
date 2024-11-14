@@ -26,38 +26,75 @@ adR = R * aR;
 adG = G * aG;
 adB = B * aB;
 
+% Concentrate all adjusted channels to a single image
+adWorkloadImage = cat(3, adR, adG, adB);
+
+% Color space change with light compansated image
+YCbCr = rgb2ycbcr(workloadImage);
+
+% Split YCbCr image into separate images
+Y = YCbCr(:,:,1);
+Cb = YCbCr(:,:,2);
+Cr = YCbCr(:,:,3);
+
+% Face mask
+maskYCbCr = (135 < Cr & Cr < 180) & (85 < Cb & Cb <135) & (Y > 80);
+maskRGB = (R > G & R > B) & ((G >= B & 5*R -12*G + 7*B >=0) | (G<B & 5*R + 7*G - 12*B >=0));
+
+
+maskRes = bsxfun(@times, workloadImage, cast(maskYCbCr, 'like', workloadImage));
+
+
 % Temporary image viewing
-subplot(2,4,1);
+subplot(3,4,1);
 imshow(R);
 title('Red channel');
 
-subplot(2,4,2);
+subplot(3,4,2);
 imshow(G);
 title('Green channel');
 
-subplot(2,4,3);
+subplot(3,4,3);
 imshow(B);
 title('Blue channel');
 
-subplot(2,4,4);
+subplot(3,4,4);
 imshow(workloadImage);
 title('Original Image');
 
-subplot(2,4,5);
+subplot(3,4,5);
 imshow(adR);
 title('Adjusted red channel');
 
-subplot(2,4,6);
+subplot(3,4,6);
 imshow(adG);
 title('Adjusted green channel');
 
-subplot(2,4,7);
+subplot(3,4,7);
 imshow(adB);
 title('Adjusted blue channel');
 
-subplot(2,4,8);
-imshow(cat(3, adR, adG, adB));
+subplot(3,4,8);
+imshow(adWorkloadImage);
 title('Adjusted image');
+
+subplot(3,4,9);
+imshow(Y);
+title('Y channel');
+
+subplot(3,4,10);
+imshow(maskRes);
+title('maskComb');
+
+subplot(3,4,11);
+imshow(maskYCbCr);
+title('maskYCbCr');
+
+subplot(3,4,12);
+imshow(YCbCr);
+title('YCbCr image');
+
+
 
 
 
