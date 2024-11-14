@@ -5,7 +5,7 @@ function [maskOutput] = faceMask(imageInput)
 %   written by Baozhu Wang, Xiuying Chang, Cuixiang Liu.
 
 % Image to work on
-workloadImage = imageInput;
+workloadImage = im2double(imageInput);
 
 % Avrage of the color channels
 R = workloadImage(:,:,1);
@@ -31,72 +31,81 @@ adWorkloadImage = cat(3, adR, adG, adB);
 
 % Color space change with light compansated image
 YCbCr = rgb2ycbcr(workloadImage);
+HSV = rgb2hsv(adWorkloadImage);
 
-% Split YCbCr image into separate images
+% Split YCbCr image into separate channels
 Y = YCbCr(:,:,1);
 Cb = YCbCr(:,:,2);
 Cr = YCbCr(:,:,3);
 
-% Face mask
-maskYCbCr = (135 < Cr & Cr < 180) & (85 < Cb & Cb <135) & (Y > 80);
-maskRGB = (R > G & R > B) & ((G >= B & 5*R -12*G + 7*B >=0) | (G<B & 5*R + 7*G - 12*B >=0));
+% Split HSV image into separate channels
+H = HSV(:,:,1);
+S = HSV(:,:,2);
+V = HSV(:,:,3);
 
+% YCbCr skin mask
+maskYCbCr = ((135/255) < Cr & Cr < (180/255)) & ((85/255) < Cb & Cb < (135/255)) & (Y > (80/255));
 
-maskRes = bsxfun(@times, workloadImage, cast(maskYCbCr, 'like', workloadImage));
+% Edge mask
+workloadImageGray = im2gray(adWorkloadImage);
+Sobx = [-1,-2,-1;0,0,0;1, 2, 1];
+Soby = [-1,0,1;-2,0,2;-1, 0, 1];
 
+imgSobx =filter2(Sobx,workloadImageGray,'same');
+imgSoby = filter2(Soby,workloadImageGray,'same');
+
+maskEdge = sqrt(imgSobx.^2+ imgSoby.^2);
+maskEdge = (maskEdge >= 0.6);
+
+maskComb = (maskYCbCr == 1) & (maskEdge == 0);
+
+SE1=strel("rectangle", [12,1]);
+maskComb = imopen(maskComb,SE1);
+SE2=strel("rectangle",[1,12]);
+maskComb = imclose(maskComb,SE2);
+
+maskedImage = bsxfun(@times, adWorkloadImage, cast(maskComb, 'like', adWorkloadImage));
 
 % Temporary image viewing
 subplot(3,4,1);
-imshow(R);
-title('Red channel');
+imshow(Y);
+title('Y');
 
 subplot(3,4,2);
-imshow(G);
-title('Green channel');
+imshow(Cb);
+title('Cb');
 
 subplot(3,4,3);
-imshow(B);
-title('Blue channel');
+imshow(Cr);
+title('Cr');
 
 subplot(3,4,4);
-imshow(workloadImage);
-title('Original Image');
+imshow(YCbCr);
+title('YCbCr Image');
 
 subplot(3,4,5);
-imshow(adR);
-title('Adjusted red channel');
+imshow(maskYCbCr);
+title('YCbCr mask');
 
 subplot(3,4,6);
-imshow(adG);
-title('Adjusted green channel');
+imshow(maskEdge);
+title('Edge mask');
 
 subplot(3,4,7);
-imshow(adB);
-title('Adjusted blue channel');
-
-subplot(3,4,8);
-imshow(adWorkloadImage);
-title('Adjusted image');
+imshow(maskComb);
+title('Combined YCbCr and edge masks');
 
 subplot(3,4,9);
-imshow(Y);
-title('Y channel');
+imshow(workloadImage);
+title('Original image');
 
 subplot(3,4,10);
-imshow(maskRes);
-title('maskComb');
+imshow(adWorkloadImage);
+title('Light compensated image');
 
 subplot(3,4,11);
-imshow(maskYCbCr);
-title('maskYCbCr');
-
-subplot(3,4,12);
-imshow(YCbCr);
-title('YCbCr image');
-
-
-
-
+imshow(maskedImage);
+title('Masked light compensated image');
 
 end
 
