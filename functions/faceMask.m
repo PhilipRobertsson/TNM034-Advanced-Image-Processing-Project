@@ -30,7 +30,7 @@ adB = B * aB;
 adWorkloadImage = cat(3, adR, adG, adB);
 
 % Color space change with light compansated image
-YCbCr = rgb2ycbcr(workloadImage);
+YCbCr = rgb2ycbcr(adWorkloadImage);
 HSV = rgb2hsv(adWorkloadImage);
 
 % Split YCbCr image into separate channels
@@ -44,7 +44,9 @@ S = HSV(:,:,2);
 V = HSV(:,:,3);
 
 % YCbCr skin mask
-maskYCbCr = ((135/255) < Cr & Cr < (180/255)) & ((85/255) < Cb & Cb < (135/255)) & (Y > (80/255));
+maskCbR = adR - Cb;
+maskCbRCr = maskCbR .* Cr;
+maskCbRCr = maskCbRCr >=0.04;
 
 % Edge mask
 workloadImageGray = im2gray(adWorkloadImage);
@@ -57,11 +59,11 @@ imgSoby = filter2(Soby,workloadImageGray,'same');
 maskEdge = sqrt(imgSobx.^2+ imgSoby.^2);
 maskEdge = (maskEdge >= 0.6);
 
-maskComb = (maskYCbCr == 1) & (maskEdge == 0);
+maskComb = (maskCbRCr == 1) & (maskEdge == 0);
 
-SE1=strel("rectangle", [12,1]);
+SE1=strel("rectangle", [10,10]);
 maskComb = imopen(maskComb,SE1);
-SE2=strel("rectangle",[1,12]);
+SE2=strel("rectangle",[20,20]);
 maskComb = imclose(maskComb,SE2);
 
 maskedImage = bsxfun(@times, adWorkloadImage, cast(maskComb, 'like', adWorkloadImage));
@@ -84,8 +86,8 @@ imshow(YCbCr);
 title('YCbCr Image');
 
 subplot(3,4,5);
-imshow(maskYCbCr);
-title('YCbCr mask');
+imshow(maskCbRCr);
+title('(R - Cb)*Cr mask');
 
 subplot(3,4,6);
 imshow(maskEdge);
