@@ -16,6 +16,22 @@ avgG = mean(G(:));
 avgB = mean(B(:));
 avgGray = (avgR+avgG+avgB)/3;
 
+maximumValue = max(max(workloadImage));
+[x,y] = find(workloadImage == maximumValue);
+
+maxR = maximumValue*R(x(1), y(1));
+maxG = maximumValue*G(x(1), y(1));
+maxB = maximumValue*B(x(1), y(1));
+
+alpha = maxG(:,:,1)/maxR(:,:,1);
+beta = maxG(:,:,1)/maxB(:,:,1);
+
+whitePatchR = alpha * R;
+whitePatchG = G;
+whitePatchB = beta * B;
+
+whitepatchWorkloadImage = cat(3, whitePatchR, whitePatchG, whitePatchB);
+
 % Adjustment factors
 aR = avgGray/avgR;
 aG = avgGray/avgG;
@@ -30,7 +46,7 @@ adB = B * aB;
 adWorkloadImage = cat(3, adR, adG, adB);
 
 % Color space change with light compansated image
-YCbCr = rgb2ycbcr(adWorkloadImage);
+YCbCr = rgb2ycbcr(whitepatchWorkloadImage);
 HSV = rgb2hsv(adWorkloadImage);
 
 % Split YCbCr image into separate channels
@@ -45,11 +61,11 @@ V = HSV(:,:,3);
 
 % YCbCr skin mask
 maskCbR = adR - Cb;
-maskCbRCr = maskCbR .* Cr;
+maskCbRCr = maskCbR .* Cr ;
 maskCbRCr = maskCbRCr >=0.04;
 
 % Edge mask
-workloadImageGray = im2gray(adWorkloadImage);
+workloadImageGray = im2gray(whitepatchWorkloadImage);
 Sobx = [-1,-2,-1;0,0,0;1, 2, 1];
 Soby = [-1,0,1;-2,0,2;-1, 0, 1];
 
@@ -57,16 +73,16 @@ imgSobx =filter2(Sobx,workloadImageGray,'same');
 imgSoby = filter2(Soby,workloadImageGray,'same');
 
 maskEdge = sqrt(imgSobx.^2+ imgSoby.^2);
-maskEdge = (maskEdge >= 0.6);
+maskEdge = (maskEdge >= 0.9);
 
 maskComb = (maskCbRCr == 1) & (maskEdge == 0);
 
-SE1=strel("rectangle", [10,10]);
+SE1=strel("rectangle", [16,16]);
 maskComb = imopen(maskComb,SE1);
-SE2=strel("rectangle",[20,20]);
+SE2=strel("disk",[15]);
 maskComb = imclose(maskComb,SE2);
 
-maskedImage = bsxfun(@times, adWorkloadImage, cast(maskComb, 'like', adWorkloadImage));
+maskedImage = bsxfun(@times, whitepatchWorkloadImage, cast(maskComb, 'like', whitepatchWorkloadImage));
 
 % Temporary image viewing
 subplot(3,4,1);
@@ -102,7 +118,7 @@ imshow(workloadImage);
 title('Original image');
 
 subplot(3,4,10);
-imshow(adWorkloadImage);
+imshow(whitepatchWorkloadImage);
 title('Light compensated image');
 
 subplot(3,4,11);
