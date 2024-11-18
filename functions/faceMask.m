@@ -16,8 +16,21 @@ avgG = mean(G(:));
 avgB = mean(B(:));
 avgGray = (avgR+avgG+avgB)/3;
 
-maximumValue = max(max(workloadImage));
-[x,y] = find(workloadImage == maximumValue);
+% Adjustment factors
+aR = avgGray/avgR;
+aG = avgGray/avgG;
+aB = avgGray/avgB;
+
+% Adjustment of RGB channels
+adR = R * aR;
+adG = G * aG;
+adB = B * aB;
+
+% Concentrate all adjusted channels to a single image
+adWorkloadImage = cat(3, adR, adG, adB);
+
+maximumValue = max(max(adWorkloadImage));
+[x,y] = find(adWorkloadImage == maximumValue);
 
 maxR = maximumValue*R(x(1), y(1));
 maxG = maximumValue*G(x(1), y(1));
@@ -31,19 +44,6 @@ whitePatchG = 1.01 * G;
 whitePatchB = beta * B;
 
 whitepatchWorkloadImage = cat(3, whitePatchR, whitePatchG, whitePatchB);
-
-% Adjustment factors
-aR = avgGray/avgR;
-aG = avgGray/avgG;
-aB = avgGray/avgB;
-
-% Adjustment of RGB channels
-adR = R * aR;
-adG = G * aG;
-adB = B * aB;
-
-% Concentrate all adjusted channels to a single image
-adWorkloadImage = cat(3, adR, adG, adB);
 
 % Color space change with light compansated image
 YCbCr = rgb2ycbcr(whitepatchWorkloadImage);
@@ -59,13 +59,19 @@ H = HSV(:,:,1);
 S = HSV(:,:,2);
 V = HSV(:,:,3);
 
+
+maxCr = max(Cr);
+normCr = Cr./maxCr;
+
 % YCbCr skin mask
 maskCbR = R - Cb.*1.1;
-maskCbRCr = maskCbR.*Cr ;
-maskCbRCr = maskCbRCr >=0.05;
+maskCbRCr = maskCbR.*normCr;
+maskCbRCr = maskCbRCr >=0.2;
+
+
 
 % Edge mask
-workloadImageGray = im2gray(whitepatchWorkloadImage);
+workloadImageGray = im2gray(Cr);
 Sobx = [-1,-2,-1;0,0,0;1, 2, 1];
 Soby = [-1,0,1;-2,0,2;-1, 0, 1];
 
@@ -73,7 +79,7 @@ imgSobx =filter2(Sobx,workloadImageGray,'same');
 imgSoby = filter2(Soby,workloadImageGray,'same');
 
 maskEdge = sqrt(imgSobx.^2+ imgSoby.^2);
-maskEdge = (maskEdge >= 0.6);
+maskEdge = (maskEdge >= 0.1);
 
 maskComb = (maskCbRCr == 1) & (maskEdge == 0);
 
@@ -111,7 +117,7 @@ title('YCbCr Image');
 
 subplot(3,4,5);
 imshow(maskCbRCr);
-title('(R - Cb)*Cr mask');
+title('(R - Cb) mask');
 
 subplot(3,4,6);
 imshow(maskEdge);
@@ -120,6 +126,10 @@ title('Edge mask');
 subplot(3,4,7);
 imshow(cropped);
 title('Combined YCbCr and edge masks');
+
+subplot(3,4,8)
+imshow(Cr./maxCr);
+title('CrmaxCr')
 
 subplot(3,4,9);
 imshow(workloadImage);
