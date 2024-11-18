@@ -27,7 +27,7 @@ alpha = maxG(:,:,1)/maxR(:,:,1);
 beta = maxG(:,:,1)/maxB(:,:,1);
 
 whitePatchR = alpha * R;
-whitePatchG = G;
+whitePatchG = 1.01 * G;
 whitePatchB = beta * B;
 
 whitepatchWorkloadImage = cat(3, whitePatchR, whitePatchG, whitePatchB);
@@ -60,9 +60,9 @@ S = HSV(:,:,2);
 V = HSV(:,:,3);
 
 % YCbCr skin mask
-maskCbR = adR - Cb;
-maskCbRCr = maskCbR .* Cr ;
-maskCbRCr = maskCbRCr >=0.04;
+maskCbR = R - Cb.*1.1;
+maskCbRCr = maskCbR.*Cr ;
+maskCbRCr = maskCbRCr >=0.05;
 
 % Edge mask
 workloadImageGray = im2gray(whitepatchWorkloadImage);
@@ -73,16 +73,24 @@ imgSobx =filter2(Sobx,workloadImageGray,'same');
 imgSoby = filter2(Soby,workloadImageGray,'same');
 
 maskEdge = sqrt(imgSobx.^2+ imgSoby.^2);
-maskEdge = (maskEdge >= 0.9);
+maskEdge = (maskEdge >= 0.6);
 
 maskComb = (maskCbRCr == 1) & (maskEdge == 0);
 
-SE1=strel("rectangle", [16,16]);
+SE1=strel("rectangle", [17,17]);
 maskComb = imopen(maskComb,SE1);
-SE2=strel("disk",[15]);
+SE2=strel("disk",[16]);
 maskComb = imclose(maskComb,SE2);
 
-maskedImage = bsxfun(@times, whitepatchWorkloadImage, cast(maskComb, 'like', whitepatchWorkloadImage));
+cropped = bwareafilt(maskComb,1);
+
+SE1=strel("rectangle", [17,17]);
+cropped = imopen(cropped,SE1);
+SE2=strel("disk",[40]);
+cropped = imclose(cropped,SE2);
+
+maskedImage = bsxfun(@times, whitepatchWorkloadImage, cast(cropped, 'like', whitepatchWorkloadImage));
+
 
 % Temporary image viewing
 subplot(3,4,1);
@@ -110,7 +118,7 @@ imshow(maskEdge);
 title('Edge mask');
 
 subplot(3,4,7);
-imshow(maskComb);
+imshow(cropped);
 title('Combined YCbCr and edge masks');
 
 subplot(3,4,9);
