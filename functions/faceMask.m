@@ -9,7 +9,6 @@ workloadImage = im2double(imageInput);
 
 % Color space change with image
 YCbCr = rgb2ycbcr(workloadImage);
-HSV = rgb2hsv(workloadImage);
 
 % Split RGB into separate channels
 R = workloadImage(:,:,1);
@@ -22,17 +21,21 @@ Cb = YCbCr(:,:,2);
 Cg = (128/255) - (81.085/255)*R + (122/255)*G - (30.915/255)*B;
 Cr = YCbCr(:,:,3);
 
-% Split HSV image into separate channels
-H = HSV(:,:,1);
-S = HSV(:,:,2);
-V = HSV(:,:,3);
 
 % Cr/Cg Mask skin mask
 maskCrCg =Cr - Cg;
 maskCrCg(maskCrCg<0) = 0;
-maskCrCg = sqrt(maskCrCg);
-maskCrCg = (maskCrCg >= 0.01);
+maskCrCg = 1.5 * sqrt(maskCrCg);
+maskCrCg = (maskCrCg >= 0.005);
 
+hairMask =1.5 * (sqrt(Cg - Y));
+hairMask(hairMask<=0) = 0;
+hairMask = (hairMask >= 0.7);
+
+shadowMask =0.9 *  sqrt(Cr - Cb);
+shadowMask = 1.2 * (shadowMask - sqrt(Cr-Cg));
+shadowMask(shadowMask<=0) = 0;
+shadowMask = (shadowMask >= 0.15);
 
 % Edge mask
 workloadImageGray = im2gray(workloadImage);
@@ -46,19 +49,19 @@ maskEdge = sqrt(imgSobx.^2+ imgSoby.^2);
 maskEdge = (maskEdge > 0.5);
 
 maskComb = (maskCrCg == 1) & (maskEdge == 0);
-SE1=strel("disk",[5]);
-maskComb = imopen(maskComb,SE1);
-SE2=strel("line",[20],0);
+maskComb = maskComb - hairMask - shadowMask;
+maskComb = imbinarize(maskComb);
+
+SE1=strel("line",40,90);
+maskComb = imclose(maskComb,SE1);
+SE2=strel("line",54,90);
 maskComb = imclose(maskComb,SE2);
-SE3=strel("line",[20],90);
-maskComb = imclose(maskComb,SE3);
 
 cropped = bwareafilt(maskComb,1);
 
-SE1=strel("rectangle", [12,12]);
-cropped = imopen(cropped,SE1);
-SE2=strel("disk",[50]);
-cropped = imclose(cropped,SE2);
+SE3=strel("rectangle", [80,80]);
+cropped = imclose(cropped,SE3);
+
 maskedImage = bsxfun(@times, workloadImage, cast(cropped, 'like', workloadImage));
 
 maskOutput = maskedImage;
