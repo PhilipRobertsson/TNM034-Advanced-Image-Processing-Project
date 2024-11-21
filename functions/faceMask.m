@@ -62,8 +62,8 @@ cropped = bwareafilt(maskComb,1);
 SE3=strel("rectangle", [80,80]);
 cropped = imclose(cropped,SE3);
 
-maskedImage = bsxfun(@times, workloadImage, cast(cropped, 'like', workloadImage));
+%maskedImage = bsxfun(@times, workloadImage, cast(cropped, 'like', workloadImage));
 
-maskOutput = maskedImage;
+maskOutput = cropped;
 end
 
