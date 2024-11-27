@@ -12,25 +12,23 @@ Cb = YCbCr(:,:,2);
 Cr = YCbCr(:,:,3);
 Cg = (128/255) - (81.085/255)*workloadImage(:,:,1) + (122/255)*workloadImage(:,:,2) - (30.915/255)*workloadImage(:,:,3);
 
-Cr2 = Cr+Cr;
-Cb2 = Cb+Cb;
+gSigma = rescale(imgaussfilt(Y,6));
 
-EyeMapC = (Cb2 ./ Cr2) - Y;
-EyeMapC = (EyeMapC .* workloadMask) - Cb;
-EyeMapC = 2*EyeMapC;
-EyeMapC = EyeMapC - 0.6*im2gray(faceOnly);
-EyeMapC = (EyeMapC > 0.65);
+EyeMapC = rescale(1/3*(pow2(Cr) + pow2(rescale(Cb)) + (Cr.*Cb))) .*workloadMask;
+%EyeMapC = (EyeMapC .* workloadMask) - 0.65 * rescale(pow2(Cr));
+%EyeMapC = 2 * EyeMapC - rescale(pow2(Cr));
+%EyeMapC = (EyeMapC > 0.4);
 
-SE1 = strel("disk",15);
-EyeMapC = imdilate(EyeMapC,SE1);
+%SE1 = strel("disk",15);
+%EyeMapC = imdilate(EyeMapC,SE1);
 
-EyeMapC = EyeMapC - (Cr>0.5);
+%EyeMapC = EyeMapC - (Cr>0.5);
 
-SE1 = strel("disk",15);
-EyeMapC = imdilate(EyeMapC,SE1);
+%SE1 = strel("disk",15);
+%EyeMapC = imdilate(EyeMapC,SE1);
 
-SE2 = strel("disk",10);
-EyeMapC = imopen(EyeMapC,SE2);
+%SE2 = strel("disk",10);
+%EyeMapC = imopen(EyeMapC,SE2);
 
 
 
@@ -40,6 +38,6 @@ EyeMapC = imopen(EyeMapC,SE2);
     %viscircles(centers, radii);
 %hold off
 
- res = EyeMapC;
+ res = EyeMapL;
 end
 
