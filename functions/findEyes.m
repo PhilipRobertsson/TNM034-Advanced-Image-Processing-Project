@@ -6,38 +6,43 @@ workloadImage = im2double(inputImage);
 
 faceOnly = bsxfun(@times, workloadImage, cast(workloadMask, 'like', workloadImage));
 
-YCbCr = rgb2ycbcr(faceOnly);
+YCbCr = im2double(rgb2ycbcr(faceOnly));
 Y = YCbCr(:,:,1);
 Cb = YCbCr(:,:,2);
 Cr = YCbCr(:,:,3);
-Cg = (128/255) - (81.085/255)*workloadImage(:,:,1) + (122/255)*workloadImage(:,:,2) - (30.915/255)*workloadImage(:,:,3);
 
-gSigma = rescale(imgaussfilt(Y,6));
+Cb2 = Cb .^2;
+Cr2=(1-Cr).^2;
+CbCr=Cb2./Cr;
 
-EyeMapC = rescale(1/3*(pow2(Cr) + pow2(rescale(Cb)) + (Cr.*Cb))) .*workloadMask;
-%EyeMapC = (EyeMapC .* workloadMask) - 0.65 * rescale(pow2(Cr));
-%EyeMapC = 2 * EyeMapC - rescale(pow2(Cr));
-%EyeMapC = (EyeMapC > 0.4);
+imgGray=rgb2gray(faceOnly);
+g=1./3;
+l=g*Cb2;
+m=g*Cr2;
+n=g*CbCr;
 
-%SE1 = strel("disk",15);
-%EyeMapC = imdilate(EyeMapC,SE1);
+EyeMapC=rescale(l+m+n);
 
-%EyeMapC = EyeMapC - (Cr>0.5);
+J=histeq(EyeMapC);
 
-%SE1 = strel("disk",15);
-%EyeMapC = imdilate(EyeMapC,SE1);
+SE=strel('disk',12,8);
+o=imdilate(imgGray,SE);
+p=1+imerode(imgGray,SE);
+EyeMapL=o./p;
 
-%SE2 = strel("disk",10);
-%EyeMapC = imopen(EyeMapC,SE2);
+EyeMapRes = J .* EyeMapL;
+
+EyeMapRes(EyeMapRes <= 0.90 * max(EyeMapRes(:))) = 0;
 
 
+SE1 = strel("disk", 15);
+EyeMapRes = imdilate(EyeMapRes, SE1);
 
-%[centers, radii] = imfindcircles(EyeMapC, [6 10], 'ObjectPolarity', 'dark', 'Sensitivity', 0.97);
+EyeMapRes = imbinarize(rescale(EyeMapRes));
 
-%hold on
-    %viscircles(centers, radii);
-%hold off
+%EyeMapRes = bwareafilt(EyeMapRes, [10 250]);
 
- res = EyeMapL;
+
+ res = EyeMapRes;
 end
 

@@ -19,26 +19,6 @@ adR = a * R;
 adG = G;
 adB = b * B;
 
-% white patch
-numRevPixels = floor((size(workloadImage,1)) * 0.1); % 10% of pixels
-
-maxRed = max(maxk(R,numRevPixels,2));
-maxGreen = max(maxk(G,numRevPixels,2));
-maxBlue = max(maxk(B,numRevPixels,2));
-
-meanMax = mean(cat(2, maxRed, maxGreen, maxBlue),"all");
-
-mR=  R * mean(maxRed,"all");
-mG = G * mean(maxGreen,"all");
-mB = B * mean(maxBlue,"all");
-
-alpha = mG / mR;
-beta = mG / mB;
-
-wpR = alpha * R;
-wpG = G;
-wpB = beta * B;
-
 outputImage = cat(3,adR,adG,adB);
 
 
