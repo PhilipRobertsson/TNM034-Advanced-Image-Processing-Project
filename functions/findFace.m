@@ -1,5 +1,5 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%
-function id = tnm034(im)
+function id = findFace(im)
 
 %
 % im: Image of unknown face, RGB-image in uint8 format in the
@@ -11,9 +11,15 @@ function id = tnm034(im)
 %
 
 % Load the database with db1
-load('database.mat', 'mean_face', 'eig_faces', 'weights_train');
+temp = load('all_images.mat'); % temp is a struct with a field 'imagesAsVectors'
+imagesDB1 = temp.imagesAsVectors; % imagesDB1 is a numeric matrix
 
+% Extract eigenfaces for DB1 and weights are returned
+[weightsDB1, meanFace, eigenFaces] = eigenfaces(imagesDB1);
 
+% Search for match in DB1
+id = searchForMatch(im, weightsDB1, meanFace, eigenFaces);
 
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%
