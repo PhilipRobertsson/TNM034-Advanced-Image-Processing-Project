@@ -18,9 +18,7 @@ function eigenfaces
 
     %save('all_images.mat', 'image_files');
     
-    load('all_images.mat', 'im_as_vec'); % Load the matrix with images
-    
-    num_images = size(im_as_vec, 2);
+    load('all_images.mat', 'im_as_vec'); % Load the matris with images
 
     image_files = reshape(all_images, 1, 16); % Reshape into a 1D array
     im_as_vec = []; % Initialize vectorized image storage
