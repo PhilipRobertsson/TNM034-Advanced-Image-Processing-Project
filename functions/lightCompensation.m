@@ -1,6 +1,20 @@
-function [outputImage] = lightCompensation(inputImage)
+function [outputImage] = lightCompensation(inputImage,i)
 %LIGHTCOMPENSATION Summary of this function goes here
 workloadImage = im2double(inputImage);
+HSV = rgb2hsv(workloadImage);
+
+S = HSV(:,:,2);
+V = HSV(:,:,3);
+SV = S.*V;
+
+workloadImage = double(workloadImage)./double(max(workloadImage(:)));
+
+maxValues = sum(max(workloadImage));
+maxValue = maxValues(:,:,1) + maxValues(:,:,2) + maxValues(:,:,3);
+
+relativeMaxValues = maxValue / (size(workloadImage,1) * size(workloadImage,2));
+
+workloadImage = workloadImage - (SV * (relativeMaxValues + 0.01));
 
 % Split channels R, G, B
 R = workloadImage(:,:,1);
@@ -20,6 +34,8 @@ adG = G;
 adB = b * B;
 
 outputImage = cat(3,adR,adG,adB);
+
+%outputImage = SV;
 
 
 end
