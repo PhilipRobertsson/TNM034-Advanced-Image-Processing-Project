@@ -46,7 +46,7 @@ imgSobx =filter2(Sobx,workloadImageGray,'same');
 imgSoby = filter2(Soby,workloadImageGray,'same');
 
 maskEdge = sqrt(imgSobx.^2+ imgSoby.^2);
-maskEdge = (maskEdge > 0.5);
+maskEdge = (maskEdge > 0.6);
 
 maskComb = (maskCrCg == 1) & (maskEdge == 0);
 maskComb = maskComb - hairMask - shadowMask;
@@ -59,8 +59,11 @@ maskComb = imclose(maskComb,SE2);
 
 cropped = bwareafilt(maskComb,1);
 
-SE3=strel("rectangle", [80,80]);
+SE3=strel("rectangle", [110,100]);
 cropped = imclose(cropped,SE3);
+
+SE4=strel("disk", 15);
+cropped = imerode(cropped,SE4);
 
 maskOutput = cropped;
 end

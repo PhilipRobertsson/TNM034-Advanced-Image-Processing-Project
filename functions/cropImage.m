@@ -15,7 +15,7 @@ FM = faceMask(IM);
 
 % Get eye positions to find the rotation of the image.
 [eres ecent] = findEyes(FM, IM);
-    
+
 leftEye = ecent(1,:);
 rightEye = ecent(2,:);
 x1 = leftEye(1);
@@ -64,5 +64,6 @@ cIM = imcrop(nIM, [upLx upLy lowRx lowRy]);
 
 % Make square
 cIM = imresize(cIM, [250 250]);
+
 
 end

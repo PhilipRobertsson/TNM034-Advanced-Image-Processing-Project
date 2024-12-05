@@ -1,4 +1,4 @@
-function [outputImage] = lightCompensation(inputImage,i)
+function [outputImage] = lightCompensation(inputImage)
 %LIGHTCOMPENSATION Summary of this function goes here
 workloadImage = im2double(inputImage);
 HSV = rgb2hsv(workloadImage);

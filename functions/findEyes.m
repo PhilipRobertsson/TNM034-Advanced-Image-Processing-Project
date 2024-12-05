@@ -38,16 +38,21 @@ o=imdilate(imgGray,SE);
 p=1+imerode(imgGray,SE);
 EyeMapL=o./p;
 
-SE=strel('disk',20,8);
+SE=strel('disk',20);
 smallerFaceMask = imerode(workloadMask, SE);
+
+smallerFaceMask(([floor(size(smallerFaceMask,1)*0.65)]:end),:) = 0;
+smallerFaceMask((1:[floor(size(smallerFaceMask,1)*0.35)]),:) = 0;
+
+smallerFaceMask(:,([floor(size(smallerFaceMask,2)*0.75)]:end)) = 0;
+smallerFaceMask(:,(1:[floor(size(smallerFaceMask,2)*0.15)])) = 0;
 
 EyeMapL = (EyeMapL .* Cr2S) .* smallerFaceMask;
 
 EyeMapRes = J .* EyeMapL;
 
 
-EyeMapRes(EyeMapRes <= 0.53 * max(EyeMapRes(:))) = 0;
-
+EyeMapRes(EyeMapRes <= 0.43 * max(EyeMapRes(:))) = 0;
 
 SE1 = strel("disk", 10);
 EyeMapRes = imdilate(EyeMapRes, SE1);
@@ -59,8 +64,7 @@ EyeMapRes = bwareafilt(EyeMapRes, 2, 'smallest');
 SE2 = strel("disk", 2,8);
 EyeMapRes = imdilate(EyeMapRes, SE2);
 
-
- res = EyeMapRes;
+res = EyeMapRes;
 s = regionprops(EyeMapRes, 'centroid');
 centroids = cat(1, s.Centroid);
 

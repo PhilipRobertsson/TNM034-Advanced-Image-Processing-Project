@@ -27,12 +27,12 @@ mouthMap = (mouthMap > 0.5);
 SE=strel('disk',20,8);
 smallerFaceMask = imerode(workloadMask, SE);
 
-smallerFaceMask([1:floor(size(smallerFaceMask,1)*0.35)],:) = 0;
+smallerFaceMask([1:floor(size(smallerFaceMask,1)*0.50)],:) = 0;
 
 mouthMap = (mouthMap .* smallerFaceMask);
 %mouthMap = (mouthMap>0.5);
 
-SE1=strel('disk',3);
+SE1=strel('disk',1);
 mouthMap = imopen(mouthMap, SE1);
 
 SE2 = strel('disk', 8);
@@ -42,8 +42,11 @@ mouthMap = imbinarize(mouthMap);
 
 mouthMap = bwareafilt(mouthMap,1);
 
-SE2 = strel('disk', 15);
-mouthMap = imclose(mouthMap, SE2);
+SE3 = strel('disk', 15);
+mouthMap = imclose(mouthMap, SE3);
+
+SE4 = strel('disk', 1);
+mouthMap = imdilate(mouthMap, SE4);
 
 res = mouthMap;
 s = regionprops(mouthMap, 'centroid');
