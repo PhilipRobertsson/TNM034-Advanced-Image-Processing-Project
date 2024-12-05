@@ -56,7 +56,7 @@ EyeMapRes = imbinarize(rescale(EyeMapRes));
 
 EyeMapRes = bwareafilt(EyeMapRes, 2, 'smallest');
 
-SE2 = strel("disk", 10,8);
+SE2 = strel("disk", 5,8);
 EyeMapRes = imdilate(EyeMapRes, SE2);
 
 
