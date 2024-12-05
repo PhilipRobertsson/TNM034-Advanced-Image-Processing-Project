@@ -46,17 +46,17 @@ EyeMapL = (EyeMapL .* Cr2S) .* smallerFaceMask;
 EyeMapRes = J .* EyeMapL;
 
 
-EyeMapRes(EyeMapRes <= 0.50 * max(EyeMapRes(:))) = 0;
+EyeMapRes(EyeMapRes <= 0.53 * max(EyeMapRes(:))) = 0;
 
 
-SE1 = strel("disk", 15);
+SE1 = strel("disk", 10);
 EyeMapRes = imdilate(EyeMapRes, SE1);
 
 EyeMapRes = imbinarize(rescale(EyeMapRes));
 
 EyeMapRes = bwareafilt(EyeMapRes, 2, 'smallest');
 
-SE2 = strel("disk", 5,8);
+SE2 = strel("disk", 2,8);
 EyeMapRes = imdilate(EyeMapRes, SE2);
 
 
