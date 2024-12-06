@@ -11,10 +11,10 @@ function [cIM] = cropImage(inputImage, edgeMargin)
 %   Finally, the cropped image is resized to a 250x250 square.
 
 IM = inputImage;
-FM = faceMask(IM);
+[FM,IT] = faceMask(IM);
 
 % Get eye positions to find the rotation of the image.
-[eres ecent] = findEyes(FM, IM);
+[eres ecent] = findEyes(FM, IT);
 
 leftEye = ecent(1,:);
 rightEye = ecent(2,:);
@@ -37,11 +37,11 @@ if (y1 > y2)
 end
 
 % Rotate the image.
-nIM = imrotate(IM, angle);
+nIM = imrotate(IT, angle,'crop');
 
 % Redefine eye positions for the crop.
-nFM = faceMask(nIM);
-[neres necent] = findEyes(nFM, nIM);
+[nFM,nIT] = faceMask(nIM);
+[neres necent] = findEyes(nFM, nIT);
 leftEye = necent(1,:);
 rightEye = necent(2,:);
 eyeLine = rightEye - leftEye;
@@ -49,7 +49,7 @@ x1 = leftEye(1);
 y1 = leftEye(2);
 
 % The mouth is needed to find lower edge of the crop.
-[mres mcent] = findMouth(nFM, nIM);
+[mres mcent] = findMouth(nFM, nIT);
 
 % Upper Left corner of the cropped image.
 upLx = x1 - (eyeLine(1) * edgeMargin);

@@ -1,4 +1,4 @@
-function [maskOutput] = faceMask(imageInput)
+function [maskOutput, translatedImage] = faceMask(imageInput)
 %   FACEMASK Summary of this function goes here
 %   Function to create a mask of the face in the image.
 %   Based on Skin Detection and Segmentation of Human Face in Color Images
@@ -65,6 +65,19 @@ cropped = imclose(cropped,SE3);
 SE4=strel("disk", 15);
 cropped = imerode(cropped,SE4);
 
-maskOutput = cropped;
+s = regionprops(cropped, 'centroid');
+centroid = cat(1, s.Centroid);
+
+centroidX = centroid(:,1);
+centroidY = centroid(:,2);
+imageCenterY = floor(size(workloadImage,1)/2);
+imageCenterX = floor(size(workloadImage,2)/2);
+
+diffX = imageCenterX - centroidX;
+diffY = imageCenterY - centroidY;
+
+maskOutput = imtranslate(cropped,[diffX, diffY],'FillValues',0,OutputView='full');
+translatedImage = imtranslate(workloadImage,[diffX, diffY],'FillValues',0,OutputView='full');
+
 end
 

@@ -24,13 +24,13 @@ mouthMap = mouthMap - rescale((Cg./Cb).^2);
 mouthMap = (mouthMap > 0.5);
 
 
-SE=strel('disk',20,8);
+SE=strel('disk',15,8);
 smallerFaceMask = imerode(workloadMask, SE);
 
-smallerFaceMask([1:floor(size(smallerFaceMask,1)*0.50)],:) = 0;
+smallerFaceMask([1:floor(size(smallerFaceMask,2)*0.50)],:) = 0;
+%smallerFaceMask([floor(size(smallerFaceMask,1)*0.75):1],:) = 0;
 
 mouthMap = (mouthMap .* smallerFaceMask);
-%mouthMap = (mouthMap>0.5);
 
 SE1=strel('disk',1);
 mouthMap = imopen(mouthMap, SE1);

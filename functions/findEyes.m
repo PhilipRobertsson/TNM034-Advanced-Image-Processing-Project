@@ -7,14 +7,11 @@ workloadImage = im2double(inputImage);
 faceOnly = bsxfun(@times, workloadImage, cast(workloadMask, 'like', workloadImage));
 
 YCbCr = im2double(rgb2ycbcr(faceOnly));
-Y = YCbCr(:,:,1);
 Cb = YCbCr(:,:,2);
 Cr = YCbCr(:,:,3);
 
 HSV = im2double(rgb2hsv(faceOnly));
-H = HSV(:,:,1);
 S = HSV(:,:,2);
-V = HSV(:,:,3);
 
 Cb2 = Cb .^2;
 Cr2=(1-Cr).^2;
@@ -33,36 +30,28 @@ EyeMapC=rescale(l+m+n);
 
 J=histeq(EyeMapC)./1.5;
 
-SE=strel('disk',12,8);
+SE=strel('disk',5,8);
 o=imdilate(imgGray,SE);
 p=1+imerode(imgGray,SE);
 EyeMapL=o./p;
 
 SE=strel('disk',20);
 smallerFaceMask = imerode(workloadMask, SE);
-
-smallerFaceMask(([floor(size(smallerFaceMask,1)*0.65)]:end),:) = 0;
-smallerFaceMask((1:[floor(size(smallerFaceMask,1)*0.35)]),:) = 0;
-
-smallerFaceMask(:,([floor(size(smallerFaceMask,2)*0.75)]:end)) = 0;
-smallerFaceMask(:,(1:[floor(size(smallerFaceMask,2)*0.15)])) = 0;
+smallerFaceMask([floor(size(smallerFaceMask,1)*0.55):end],:) = 0;
 
 EyeMapL = (EyeMapL .* Cr2S) .* smallerFaceMask;
 
 EyeMapRes = J .* EyeMapL;
 
-
 EyeMapRes(EyeMapRes <= 0.43 * max(EyeMapRes(:))) = 0;
 
-SE1 = strel("disk", 10);
+SE1 = strel("disk", 20);
 EyeMapRes = imdilate(EyeMapRes, SE1);
 
 EyeMapRes = imbinarize(rescale(EyeMapRes));
 
-EyeMapRes = bwareafilt(EyeMapRes, 2, 'smallest');
-
-SE2 = strel("disk", 2,8);
-EyeMapRes = imdilate(EyeMapRes, SE2);
+%SE2 = strel("disk", 2,8);
+%EyeMapRes = imdilate(EyeMapRes, SE2);
 
 res = EyeMapRes;
 s = regionprops(EyeMapRes, 'centroid');
