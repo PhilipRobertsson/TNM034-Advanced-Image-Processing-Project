@@ -50,7 +50,7 @@ upLy = y1 - (eyeLine(1) * edgeMargin);
 
 % Distance from UPLEFT to LOWRIGHT.
 lowRx = eyeLine(1) + (eyeLine(1) * edgeMargin) * 2;
-lowRy = (mcent(2) - upLy) * 1.2;
+lowRy = (mcent(2) - upLy) * (1+edgeMargin/2);
 
 % Cropping...
 cIM = imcrop(nIM, [upLx upLy lowRx lowRy]);
