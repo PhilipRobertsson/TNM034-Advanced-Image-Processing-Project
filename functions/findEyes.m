@@ -1,58 +1,61 @@
 function [res, centroids] = findEyes(inputMask, inputImage)
-%FINDEYES Summary of this function goes here
-%   Detailed explanation goes here
-workloadMask = inputMask;
-workloadImage = im2double(inputImage);
 
+workloadMask = inputMask; % Load mask from faceMask
+workloadImage = im2double(inputImage); % Load image from faceMask
+
+% Create an image containing only the face with the face mask
 faceOnly = bsxfun(@times, workloadImage, cast(workloadMask, 'like', workloadImage));
 
+% Convert to YCbCr colour space and extract relevant channels
 YCbCr = im2double(rgb2ycbcr(faceOnly));
 Cb = YCbCr(:,:,2);
 Cr = YCbCr(:,:,3);
 
+% Convert to HSV colour space and extract relevant channel
 HSV = im2double(rgb2hsv(faceOnly));
 S = HSV(:,:,2);
 
+% Compute relevant images from Cb, Cr and, S channels
 Cb2 = Cb .^2;
 Cr2=(1-Cr).^2;
 CbCr=Cb2./Cr;
-
-
 Cr2S = rescale(Cr.*S - Cb);
 
-imgGray=rgb2gray(faceOnly);
+% Create the colour map for the eyes
 g=1./3;
 l=g*Cb2;
 m=g*Cr2;
 n=g*CbCr;
-
 EyeMapC=rescale(l+m+n);
-
 J=histeq(EyeMapC)./1.5;
 
+% Create the dilated luminance map for the eyes
+imgGray=rgb2gray(faceOnly);
 SE=strel('disk',5,8);
 o=imdilate(imgGray,SE);
 p=1+imerode(imgGray,SE);
 EyeMapL=o./p;
 
+% Create a smaller face mask to remove unneccesary parts of the face
 SE=strel('disk',20);
 smallerFaceMask = imerode(workloadMask, SE);
 smallerFaceMask([floor(size(smallerFaceMask,1)*0.55):end],:) = 0;
 
+% Apply the smaller face mask to the dilated face mask
 EyeMapL = (EyeMapL .* Cr2S) .* smallerFaceMask;
+EyeMapRes = J .* EyeMapL; % Combine both eye maps
 
-EyeMapRes = J .* EyeMapL;
-
+% Filter out to dark areas based on the max value in the eye map
 EyeMapRes(EyeMapRes <= 0.43 * max(EyeMapRes(:))) = 0;
 
+% Morpholigical operation to increase size of the eyes
 SE1 = strel("disk", 20);
 EyeMapRes = imdilate(EyeMapRes, SE1);
 
+% Make sure the mask is a binary image
 EyeMapRes = imbinarize(rescale(EyeMapRes));
 
-%SE2 = strel("disk", 2,8);
-%EyeMapRes = imdilate(EyeMapRes, SE2);
-
+% Assign the eye mask as the output mask and find centroids for the eyes
 res = EyeMapRes;
 s = regionprops(EyeMapRes, 'centroid');
 centroids = cat(1, s.Centroid);

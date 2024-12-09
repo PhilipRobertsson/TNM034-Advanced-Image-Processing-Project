@@ -1,8 +1,4 @@
 function [maskOutput, translatedImage] = faceMask(imageInput)
-%   FACEMASK Summary of this function goes here
-%   Function to create a mask of the face in the image.
-%   Based on Skin Detection and Segmentation of Human Face in Color Images
-%   written by Baozhu Wang, Xiuying Chang, Cuixiang Liu.
 
 % Image to work on
 workloadImage = im2double(imageInput);
@@ -28,10 +24,12 @@ maskCrCg(maskCrCg<0) = 0;
 maskCrCg = 1.5 * sqrt(maskCrCg);
 maskCrCg = (maskCrCg >= 0.005);
 
+% Hair mask used to remove hair from image
 hairMask =1.5 * (sqrt(Cg - Y));
 hairMask(hairMask<=0) = 0;
 hairMask = (hairMask >= 0.7);
 
+% Shadow mask used to remove shadows in the background
 shadowMask =0.9 *  sqrt(Cr - Cb);
 shadowMask = 1.2 * (shadowMask - sqrt(Cr-Cg));
 shadowMask(shadowMask<=0) = 0;
@@ -48,26 +46,32 @@ imgSoby = filter2(Soby,workloadImageGray,'same');
 maskEdge = sqrt(imgSobx.^2+ imgSoby.^2);
 maskEdge = (maskEdge > 0.6);
 
+% Combine color mask, edge mask, hair mask and shadow mask
 maskComb = (maskCrCg == 1) & (maskEdge == 0);
 maskComb = maskComb - hairMask - shadowMask;
 maskComb = imbinarize(maskComb);
 
+% Morpholigical Operations
 SE1=strel("line",40,90);
 maskComb = imclose(maskComb,SE1);
 SE2=strel("line",54,90);
 maskComb = imclose(maskComb,SE2);
 
+% Save largest element which is the face
 cropped = bwareafilt(maskComb,1);
 
+% Morpholigical Operations
 SE3=strel("rectangle", [110,100]);
 cropped = imclose(cropped,SE3);
 
 SE4=strel("disk", 15);
 cropped = imerode(cropped,SE4);
 
+% Find centroid of face
 s = regionprops(cropped, 'centroid');
 centroid = cat(1, s.Centroid);
 
+% Translate face to center of image
 centroidX = centroid(:,1);
 centroidY = centroid(:,2);
 imageCenterY = floor(size(workloadImage,1)/2);
@@ -76,6 +80,7 @@ imageCenterX = floor(size(workloadImage,2)/2);
 diffX = imageCenterX - centroidX;
 diffY = imageCenterY - centroidY;
 
+% Return the finalized mask and the translated image
 maskOutput = imtranslate(cropped,[diffX, diffY],'FillValues',0,OutputView='full');
 translatedImage = imtranslate(workloadImage,[diffX, diffY],'FillValues',0,OutputView='full');
 

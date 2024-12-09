@@ -10,25 +10,18 @@ function [cIM] = cropImage(inputImage, edgeMargin)
 %   edgeMargin is used to give some space.
 %   Finally, the cropped image is resized to a 250x250 square.
 
-IM = inputImage;
-[FM,IT] = faceMask(IM);
+IM = inputImage; % Read input image
+[FM,IT] = faceMask(IM); % Generate face mask and a translated image
 
 % Get eye positions to find the rotation of the image.
-[eres ecent] = findEyes(FM, IT);
+[eres ecent] = findEyes(FM, IT); % Find eyes in image, used for rotation
 
-leftEye = ecent(1,:);
-rightEye = ecent(2,:);
-x1 = leftEye(1);
-y1 = leftEye(2);
-x2 = rightEye(1);
-y2 = rightEye(2);
-
-%{
-% Visualize the line between the eyes.
-abs(y2-y1)
-figure(1), imshow(IM), hold on
-plot([x1 x2], [y1 y2], "*-", Color="green"), hold off
-%}
+leftEye = ecent(1,:); % The left eye from findEyes centroids
+rightEye = ecent(2,:); % The right eye from findEyes centroids
+x1 = leftEye(1); % X coordinate of left eye
+y1 = leftEye(2); % Y coordinate of left eye
+x2 = rightEye(1); % X coordinate of right eye
+y2 = rightEye(2); % Y coordinate of right eye
 
 % The angle needed to straighten the image.
 angle = atand(abs(y2-y1) / abs(x2-x1));
@@ -40,13 +33,13 @@ end
 nIM = imrotate(IT, angle,'crop');
 
 % Redefine eye positions for the crop.
-[nFM,nIT] = faceMask(nIM);
-[neres necent] = findEyes(nFM, nIT);
-leftEye = necent(1,:);
-rightEye = necent(2,:);
-eyeLine = rightEye - leftEye;
-x1 = leftEye(1);
-y1 = leftEye(2);
+[nFM,nIT] = faceMask(nIM); % New face mask after rotation
+[neres necent] = findEyes(nFM, nIT); % New eye mask and centroids after rotation
+leftEye = necent(1,:); % The left eye from findEyes centroids
+rightEye = necent(2,:); % The right eye from findEyes centroids
+eyeLine = rightEye - leftEye; % The now straight line between the eyes
+x1 = leftEye(1); % X coordinate of left eye used to find where to place the corner of the image
+y1 = leftEye(2); % Y coordinate of left eye used to find where to place the corner of the image
 
 % The mouth is needed to find lower edge of the crop.
 [mres mcent] = findMouth(nFM, nIT);
