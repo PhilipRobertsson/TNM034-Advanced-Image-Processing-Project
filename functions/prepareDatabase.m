@@ -15,14 +15,12 @@ imagesAsVectors = [];
 
 for i = 1:length(flatFiles)
     img = imread(flatFiles{i}); % Read image
-    gray = rgb2gray(img); % Grayscale image
-    norm_img = double(gray) / 255; % Normalize pixelvalues
 
-    % REPLACE ME (((THE FIND EYES AND CROP HERE)))
-    cropped = norm_img(170:460, 70:320);
-    %
+    imgLC = lightCompensation(img); % Preform light compensation to assure all images are simmilar
+    imgCr = cropImage(imgLC, 0.6); % Crop all images to be the same sizes and only contain relavant features
+    imgGray = rgb2gray(im2double(imgCr)); % Convert image to gray for computational simplificationS
 
-    imagesAsVectors = [imagesAsVectors, cropped(:)]; % Store in matrix
+    imagesAsVectors = [imagesAsVectors, imgGray(:)]; % Store in matrix
 end
 
 % Save all images as matrix in a .mat-file
