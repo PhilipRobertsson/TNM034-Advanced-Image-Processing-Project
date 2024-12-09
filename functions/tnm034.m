@@ -1,5 +1,5 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%
-function id = tnm064(im)
+function id = tnm034(im)
 
 %
 % im: Image of unknown face, RGB-image in uint8 format in the
