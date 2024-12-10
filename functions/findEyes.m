@@ -19,7 +19,7 @@ S = HSV(:,:,2);
 Cb2 = Cb .^2;
 Cr2=(1-Cr).^2;
 CbCr=Cb2./Cr;
-Cr2S = rescale(Cr.*S - Cb);
+Cr2S = Cr.*S;
 
 % Create the colour map for the eyes
 g=1./3;
@@ -27,19 +27,23 @@ l=g*Cb2;
 m=g*Cr2;
 n=g*CbCr;
 EyeMapC=rescale(l+m+n);
-J=histeq(EyeMapC)./1.5;
+J=histeq(EyeMapC);
 
 % Create the dilated luminance map for the eyes
 imgGray=rgb2gray(faceOnly);
-SE=strel('disk',5,8);
+SE=strel('disk',8,8);
 o=imdilate(imgGray,SE);
 p=1+imerode(imgGray,SE);
 EyeMapL=o./p;
 
 % Create a smaller face mask to remove unneccesary parts of the face
-SE=strel('disk',20);
+SE=strel('disk',15);
 smallerFaceMask = imerode(workloadMask, SE);
-smallerFaceMask([floor(size(smallerFaceMask,1)*0.55):end],:) = 0;
+smallerFaceMask(([floor(size(smallerFaceMask,1)*0.55)]:end),:) = 0;
+smallerFaceMask((1:[floor(size(smallerFaceMask,1)*0.35)]),:) = 0;
+
+smallerFaceMask(:,([floor(size(smallerFaceMask,2)*0.70)]:end)) = 0;
+smallerFaceMask(:,(1:[floor(size(smallerFaceMask,2)*0.15)])) = 0;
 
 % Apply the smaller face mask to the dilated face mask
 EyeMapL = (EyeMapL .* Cr2S) .* smallerFaceMask;
@@ -54,6 +58,8 @@ EyeMapRes = imdilate(EyeMapRes, SE1);
 
 % Make sure the mask is a binary image
 EyeMapRes = imbinarize(rescale(EyeMapRes));
+
+EyeMapRes = bwareafilt(EyeMapRes, 2, 'largest');
 
 % Assign the eye mask as the output mask and find centroids for the eyes
 res = EyeMapRes;
