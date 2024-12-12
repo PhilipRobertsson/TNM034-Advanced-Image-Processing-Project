@@ -19,7 +19,7 @@ S = HSV(:,:,2);
 Cb2 = Cb .^2;
 Cr2=(1-Cr).^2;
 CbCr=Cb2./Cr;
-Cr2S = Cr.*S;
+CrS = Cr.*S;
 
 % Create the colour map for the eyes
 g=1./3;
@@ -46,7 +46,7 @@ smallerFaceMask(:,([floor(size(smallerFaceMask,2)*0.70)]:end)) = 0;
 smallerFaceMask(:,(1:[floor(size(smallerFaceMask,2)*0.15)])) = 0;
 
 % Apply the smaller face mask to the dilated face mask
-EyeMapL = (EyeMapL .* Cr2S) .* smallerFaceMask;
+EyeMapL = (EyeMapL .* CrS) .* smallerFaceMask;
 EyeMapRes = J .* EyeMapL; % Combine both eye maps
 
 % Filter out to dark areas based on the max value in the eye map

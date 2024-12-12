@@ -16,16 +16,16 @@ Cg = (128/255) - (81.085/255)*faceOnly(:,:,1) + (122/255)*faceOnly(:,:,2) - (30.
 Cb2 = Cb.^2;
 
 % Create the colour map for the mouth
-mouthMap = rescale(1/3*(Cb2 + rescale(Cr) + (Cr./Cb))) .*workloadMask;
+mouthMap = rescale(1/3*(Cb2 + rescale(Cr) + (Cr./Cb))) .* workloadMask;
 mouthMap = mouthMap - rescale((Cg./Cb).^2);
-mouthMap = (mouthMap > 0.5);
-
+mouthMap = (mouthMap > 0.46);
 
 % Create a smaller face mask to remove unneccesary parts of the face
 SE=strel('disk',15,8);
 smallerFaceMask = imerode(workloadMask, SE);
-smallerFaceMask([1:floor(size(smallerFaceMask,2)*0.50)],:) = 0;
+smallerFaceMask([1:floor(size(smallerFaceMask,1)*0.50)],:) = 0;
 mouthMap = (mouthMap .* smallerFaceMask); % Combine mouth map with the smaller face mask
+
 
 % Morpholigical operation to increase size of mouth and remove other parts
 % of the image
@@ -42,10 +42,11 @@ mouthMap = bwareafilt(mouthMap,1);
 
 % Morpholigical operation to increase size of mouth and make sure both lips
 % are part of the mouth
-SE3 = strel('disk', 15);
+SE3 = strel('disk', 50);
 mouthMap = imclose(mouthMap, SE3);
 SE4 = strel('disk', 1);
 mouthMap = imdilate(mouthMap, SE4);
+
 
 % Assign the mouth mask as the output mask and find centroid for the mouth
 res = mouthMap;

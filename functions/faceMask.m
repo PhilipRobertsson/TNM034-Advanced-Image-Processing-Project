@@ -21,8 +21,8 @@ Cr = YCbCr(:,:,3);
 % Cr/Cg Mask skin mask
 maskCrCg =Cr - Cg;
 maskCrCg(maskCrCg<0) = 0;
-maskCrCg = 1.5 * sqrt(maskCrCg);
-maskCrCg = (maskCrCg >= 0.005);
+maskCrCg = sqrt(maskCrCg);
+maskCrCg = (maskCrCg >= 0.05);
 
 % Hair mask used to remove hair from image
 hairMask =1.5 * (sqrt(Cg - Y));
@@ -52,20 +52,18 @@ maskComb = maskComb - hairMask - shadowMask;
 maskComb = imbinarize(maskComb);
 
 % Morpholigical Operations
-SE1=strel("line",40,90);
+SE1=strel("line",54,90);
 maskComb = imclose(maskComb,SE1);
-SE2=strel("line",54,90);
-maskComb = imclose(maskComb,SE2);
 
 % Save largest element which is the face
 cropped = bwareafilt(maskComb,1);
 
 % Morpholigical Operations
-SE3=strel("rectangle", [110,100]);
-cropped = imclose(cropped,SE3);
+SE2=strel("rectangle", [110,100]);
+cropped = imclose(cropped,SE2);
 
-SE4=strel("disk", 15);
-cropped = imerode(cropped,SE4);
+SE3=strel("disk", 15);
+cropped = imerode(cropped,SE3);
 
 % Find centroid of face
 s = regionprops(cropped, 'centroid');
