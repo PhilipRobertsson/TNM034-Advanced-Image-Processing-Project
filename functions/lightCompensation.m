@@ -17,7 +17,7 @@ maxValue = maxValues(:,:,1) + maxValues(:,:,2) + maxValues(:,:,3);
 relativeMaxValues = maxValue / (size(workloadImage,1) * size(workloadImage,2));
 
 % Normalize image values
-workloadImage = workloadImage - (SV * (relativeMaxValues + 0.01));
+workloadImage = workloadImage - (SV * (relativeMaxValues + 0.005));
 
 % Split channels R, G, B
 R = workloadImage(:,:,1);

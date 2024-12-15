@@ -30,11 +30,12 @@ if (y1 > y2)
 end
 
 % Rotate the image.
-nIM = imrotate(IT, angle,'crop');
+nIM = imrotate(IT, angle,'loose');
 
 % Redefine eye positions for the crop.
 [nFM,nIT] = faceMask(nIM); % New face mask after rotation
 [neres necent] = findEyes(nFM, nIT); % New eye mask and centroids after rotation
+
 leftEye = necent(1,:); % The left eye from findEyes centroids
 rightEye = necent(2,:); % The right eye from findEyes centroids
 eyeLine = rightEye - leftEye; % The now straight line between the eyes

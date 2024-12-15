@@ -17,10 +17,9 @@ distances = vecnorm(weightsDB1 - weigthsTestImage, 2, 1);
 [minimunDist, matchIndex] = min(distances);
 
 % Threshold for matching
-threshold = 10;
+threshold = 16;
 if minimunDist < threshold
     id = matchIndex;
 else
     id = 0;
-
 end

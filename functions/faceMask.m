@@ -30,7 +30,7 @@ hairMask(hairMask<=0) = 0;
 hairMask = (hairMask >= 0.7);
 
 % Shadow mask used to remove shadows in the background
-shadowMask =0.9 *  sqrt(Cr - Cb);
+shadowMask = 2.0 * (Cr - Cb);
 shadowMask = 1.2 * (shadowMask - sqrt(Cr-Cg));
 shadowMask(shadowMask<=0) = 0;
 shadowMask = (shadowMask >= 0.15);
@@ -52,18 +52,15 @@ maskComb = maskComb - hairMask - shadowMask;
 maskComb = imbinarize(maskComb);
 
 % Morpholigical Operations
-SE1=strel("line",54,90);
+SE1=strel("line",12,90);
 maskComb = imclose(maskComb,SE1);
 
 % Save largest element which is the face
 cropped = bwareafilt(maskComb,1);
 
 % Morpholigical Operations
-SE2=strel("rectangle", [110,100]);
+SE2=strel("rectangle", [250,180]);
 cropped = imclose(cropped,SE2);
-
-SE3=strel("disk", 15);
-cropped = imerode(cropped,SE3);
 
 % Find centroid of face
 s = regionprops(cropped, 'centroid');
@@ -83,4 +80,3 @@ maskOutput = imtranslate(cropped,[diffX, diffY],'FillValues',0,OutputView='full'
 translatedImage = imtranslate(workloadImage,[diffX, diffY],'FillValues',0,OutputView='full');
 
 end
-

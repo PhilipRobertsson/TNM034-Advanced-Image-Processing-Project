@@ -31,33 +31,34 @@ J=histeq(EyeMapC);
 
 % Create the dilated luminance map for the eyes
 imgGray=rgb2gray(faceOnly);
-SE=strel('disk',8,8);
+SE=strel('disk',12,4);
 o=imdilate(imgGray,SE);
 p=1+imerode(imgGray,SE);
-EyeMapL=o./p;
+EyeMapL=rescale(o./p);
 
 % Create a smaller face mask to remove unneccesary parts of the face
-SE=strel('disk',15);
+SE=strel('disk',12);
 smallerFaceMask = imerode(workloadMask, SE);
-smallerFaceMask(([floor(size(smallerFaceMask,1)*0.55)]:end),:) = 0;
-smallerFaceMask((1:[floor(size(smallerFaceMask,1)*0.35)]),:) = 0;
+smallerFaceMask(([floor(size(smallerFaceMask,1)*0.50)]:end),:) = 0;
+smallerFaceMask((1:[floor(size(smallerFaceMask,1)*0.20)]),:) = 0;
 
-smallerFaceMask(:,([floor(size(smallerFaceMask,2)*0.70)]:end)) = 0;
-smallerFaceMask(:,(1:[floor(size(smallerFaceMask,2)*0.15)])) = 0;
+smallerFaceMask(:,([floor(size(smallerFaceMask,2)*0.85)]:end)) = 0;
+smallerFaceMask(:,(1:[floor(size(smallerFaceMask,2)*0.20)])) = 0;
 
 % Apply the smaller face mask to the dilated face mask
-EyeMapL = (EyeMapL .* CrS) .* smallerFaceMask;
+EyeMapL = (EyeMapL .* (5*CrS)) .* smallerFaceMask;
 EyeMapRes = J .* EyeMapL; % Combine both eye maps
 
+
 % Filter out to dark areas based on the max value in the eye map
-EyeMapRes(EyeMapRes <= 0.43 * max(EyeMapRes(:))) = 0;
+EyeMapRes(EyeMapRes <= 0.25 * max(EyeMapRes(:))) = 0;
 
 % Morpholigical operation to increase size of the eyes
 SE1 = strel("disk", 20);
 EyeMapRes = imdilate(EyeMapRes, SE1);
 
 % Make sure the mask is a binary image
-EyeMapRes = imbinarize(rescale(EyeMapRes));
+EyeMapRes = imbinarize(EyeMapRes);
 
 EyeMapRes = bwareafilt(EyeMapRes, 2, 'largest');
 
