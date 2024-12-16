@@ -1,45 +1,31 @@
 function [outputImage] = lightCompensation(inputImage)
 %LIGHTCOMPENSATION Summary of this function goes here
-workloadImage = im2double(inputImage); % Read image
-HSV = rgb2hsv(workloadImage); % Create an HSV image from input
 
-S = HSV(:,:,2); % Saturation part of HSV image
-V = HSV(:,:,3); % Value part of HSV image
-SV = S.*V; % Used to nomralize too bright images
+workloadImage = im2double(inputImage); %[0-1]
+grayImage = rgb2gray(workloadImage); %[0-1]
 
-workloadImage = double(workloadImage)./double(max(workloadImage(:))); % Create copy of input image
+mask = grayImage > 0.3;
 
-% Find max values
-maxValues = sum(max(workloadImage));
-maxValue = maxValues(:,:,1) + maxValues(:,:,2) + maxValues(:,:,3);
+redChannel = imadjust(workloadImage(:, :, 1));
+greenChannel = imadjust(workloadImage(:, :, 2));
+blueChannel = imadjust(workloadImage(:, :, 3));
 
-% Max value based on the number of pixels in the image
-relativeMaxValues = maxValue / (size(workloadImage,1) * size(workloadImage,2));
+meanR = mean(redChannel(mask));
+meanG = mean(greenChannel(mask));
+meanB = mean(blueChannel(mask));
 
-% Normalize image values
-workloadImage = workloadImage - (SV * (relativeMaxValues + 0.005));
+maxR = max(redChannel(mask));
+maxG = max(greenChannel(mask));
+maxB = max(blueChannel(mask));
 
-% Split channels R, G, B
-R = workloadImage(:,:,1);
-G = workloadImage(:,:,2);
-B = workloadImage(:,:,3);
+deltaR = maxR - meanR;
+deltaG = maxG - meanG;
+deltaB = maxB - meanB;
 
-% Find avarage values for all channels, gray world
-avgR = mean(R(:));
-avgG = mean(G(:));
-avgB = mean(B(:));
-
-% Calculate alpha and beta
-a = avgG / avgR;
-b = avgG / avgB;
-
-% Gray world light compensation
-adR = a * R;
-adG = G;
-adB = b * B;
-
-% Create output rgb image from R, G, and B channels
-outputImage = cat(3,adR,adG,adB);
+newR = redChannel + deltaR;
+newG = greenChannel + deltaG;
+newB = blueChannel + deltaB;
+outputImage = cat(3,newR,newG,newB);
 
 end
 

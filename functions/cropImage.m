@@ -14,7 +14,7 @@ IM = inputImage; % Read input image
 [FM,IT] = faceMask(IM); % Generate face mask and a translated image
 
 % Get eye positions to find the rotation of the image.
-[eres ecent] = findEyes(FM, IT); % Find eyes in image, used for rotation
+[eres, ecent] = findEyes(FM, IT); % Find eyes in image, used for rotation
 
 leftEye = ecent(1,:); % The left eye from findEyes centroids
 rightEye = ecent(2,:); % The right eye from findEyes centroids
@@ -30,11 +30,11 @@ if (y1 > y2)
 end
 
 % Rotate the image.
-nIM = imrotate(IT, angle,'loose');
+nIM = imrotate(IT, angle,'crop');
 
 % Redefine eye positions for the crop.
 [nFM,nIT] = faceMask(nIM); % New face mask after rotation
-[neres necent] = findEyes(nFM, nIT); % New eye mask and centroids after rotation
+[neres, necent] = findEyes(nFM, nIT); % New eye mask and centroids after rotation
 
 leftEye = necent(1,:); % The left eye from findEyes centroids
 rightEye = necent(2,:); % The right eye from findEyes centroids
@@ -43,7 +43,7 @@ x1 = leftEye(1); % X coordinate of left eye used to find where to place the corn
 y1 = leftEye(2); % Y coordinate of left eye used to find where to place the corner of the image
 
 % The mouth is needed to find lower edge of the crop.
-[mres mcent] = findMouth(nFM, nIT);
+[mres, mcent] = findMouth(nFM, nIT);
 
 % Upper Left corner of the cropped image.
 upLx = x1 - (eyeLine(1) * edgeMargin);
@@ -54,7 +54,7 @@ lowRx = eyeLine(1) + (eyeLine(1) * edgeMargin) * 2;
 lowRy = (mcent(2) - upLy) * (1+edgeMargin/2);
 
 % Cropping...
-cIM = imcrop(nIM, [upLx upLy lowRx lowRy]);
+cIM = imcrop(nIT, [upLx upLy lowRx lowRy]);
 
 % Make square
 cIM = imresize(cIM, [250 250]);

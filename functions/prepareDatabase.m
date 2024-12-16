@@ -17,7 +17,7 @@ for i = 1:length(flatFiles)
     img = imread(flatFiles{i}); % Read image
 
     imgLC = lightCompensation(img); % Preform light compensation to assure all images are simmilar
-    imgCr = cropImage(imgLC, 0.6); % Crop all images to be the same sizes and only contain relavant features
+    imgCr = cropImage(imgLC, 0.8); % Crop all images to be the same sizes and only contain relavant features
     imgGray = rgb2gray(im2double(imgCr)); % Convert image to gray for computational simplificationS
 
     imagesAsVectors = [imagesAsVectors, imgGray(:)]; % Store in matrix

@@ -17,49 +17,31 @@ Cb = YCbCr(:,:,2);
 Cg = (128/255) - (81.085/255)*R + (122/255)*G - (30.915/255)*B;
 Cr = YCbCr(:,:,3);
 
+% skin mask
+skinMask = (Cr./Cg);
+skinMask(skinMask <= 0.95) = 0;
+skinMask = imbinarize(skinMask);
 
-% Cr/Cg Mask skin mask
-maskCrCg =Cr - Cg;
-maskCrCg(maskCrCg<0) = 0;
-maskCrCg = sqrt(maskCrCg);
-maskCrCg = (maskCrCg >= 0.05);
+% hair mask
+hairMask = Cg ./ Y;
+hairMask = imbinarize(hairMask);
 
-% Hair mask used to remove hair from image
-hairMask =1.5 * (sqrt(Cg - Y));
-hairMask(hairMask<=0) = 0;
-hairMask = (hairMask >= 0.7);
+shadowMask =1.5 * ((1-Cr) - Cb);
+shadowMask = imbinarize(shadowMask);
 
-% Shadow mask used to remove shadows in the background
-shadowMask = 2.0 * (Cr - Cb);
-shadowMask = 1.2 * (shadowMask - sqrt(Cr-Cg));
-shadowMask(shadowMask<=0) = 0;
-shadowMask = (shadowMask >= 0.15);
-
-% Edge mask
-workloadImageGray = im2gray(workloadImage);
-Sobx = [-1,-2,-1;0,0,0;1, 2, 1];
-Soby = [-1,0,1;-2,0,2;-1, 0, 1];
-
-imgSobx =filter2(Sobx,workloadImageGray,'same');
-imgSoby = filter2(Soby,workloadImageGray,'same');
-
-maskEdge = sqrt(imgSobx.^2+ imgSoby.^2);
-maskEdge = (maskEdge > 0.6);
-
-% Combine color mask, edge mask, hair mask and shadow mask
-maskComb = (maskCrCg == 1) & (maskEdge == 0);
-maskComb = maskComb - hairMask - shadowMask;
-maskComb = imbinarize(maskComb);
+maskComb =(skinMask - hairMask) - shadowMask;
 
 % Morpholigical Operations
-SE1=strel("line",12,90);
-maskComb = imclose(maskComb,SE1);
+SE1=strel("rectangle",[1 1]);
+maskComb = imerode(maskComb,SE1);
+
+SE2 = strel('disk',5);
+maskComb = imclose(maskComb, SE2);
 
 % Save largest element which is the face
-cropped = bwareafilt(maskComb,1);
+cropped = bwareafilt(imbinarize(maskComb),1);
 
-% Morpholigical Operations
-SE2=strel("rectangle", [250,180]);
+SE2=strel("rectangle", [150,180]);
 cropped = imclose(cropped,SE2);
 
 % Find centroid of face
